@@ -1,9 +1,9 @@
 package proxypaygo
 
 import (
-	"encoding/binary"
 	"errors"
 	"fmt"
+	"strconv"
 	"time"
 
 	"github.com/shopspring/decimal"
@@ -72,7 +72,7 @@ func (s *ProxyPay) IssuePaymentReference(amount decimal.Decimal, endDatetime tim
 	if err != nil {
 		return
 	}
-	url := fmt.Sprintf("%s/references/%s", sandboxUrl, referenceID)
+	url := fmt.Sprintf("%s/references/%d", sandboxUrl, referenceID)
 
 	request := IsusePaymentReferenceParams{
 		Amount:      amount,
@@ -96,8 +96,15 @@ func (s *ProxyPay) GenerateReferenceID() (referenceID int64, err error) {
 		"Authorization": fmt.Sprintf("Token %s", s.Token),
 		"Accept":        acceptResponsePayload,
 	}, nil)
+	if err != nil {
+		return
+	}
 
-	referenceID = int64(binary.BigEndian.Uint64(data))
+	rf, err := strconv.Atoi(string(data))
+	if err != nil {
+		panic(err)
+	}
+	referenceID = int64(rf)
 	return
 }
 func (s *ProxyPay) DeletePaymentReference(referenceID string) (err error) {
