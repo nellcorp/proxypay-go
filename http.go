@@ -3,6 +3,7 @@ package proxypaygo
 import (
 	"encoding/json"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"net"
 	"net/http"
@@ -113,7 +114,7 @@ func httpPost(url string, headers map[string]string, params interface{}) (respon
 	}
 	defer resp.Body.Close()
 
-	response, err = ioutil.ReadAll(resp.Body)
+	response, err = io.ReadAll(resp.Body)
 	if err != nil {
 		return
 	}
@@ -124,5 +125,9 @@ func httpPost(url string, headers map[string]string, params interface{}) (respon
 	}
 	responseHeaders = resp.Header.Clone()
 
+	return
+}
+
+func httpDelete(url string, headers map[string]string, params interface{}) (response []byte, responseHeaders http.Header, err error) {
 	return
 }

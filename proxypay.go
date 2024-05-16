@@ -9,9 +9,10 @@ import (
 )
 
 const (
-	sandboxUrl         = "some url"
-	productionUrl      = "some url"
-	paymentTransaction = "payment"
+	sandboxUrl            = "some url"
+	productionUrl         = "some url"
+	paymentTransaction    = "payment"
+	acceptResponsePayload = "application/vnd.proxypay.v2+json"
 )
 
 var (
@@ -64,39 +65,55 @@ func NewProxyPay(token string, environment string) (proxyPay *ProxyPay, err erro
 	return
 }
 
-func (s *ProxyPay) IssuePaymentReference(params IsusePaymentReferenceParams) (transaction Payment, err error) {
+func (s *ProxyPay) IssuePaymentReference(amount decimal.Decimal, endDatetime time.Time) (referenceID string, err error) {
 
-	id, err := s.GenerateReferenceID()
+	referenceID, err = s.GenerateReferenceID()
 	if err != nil {
 		return
 	}
-	url := fmt.Sprintf("%s", sandboxUrl)
-	response, responseHeaders, err := httpPost(url,
+	url := fmt.Sprintf("%s/references/%s", sandboxUrl, referenceID)
+
+	request := IsusePaymentReferenceParams{
+		Amount:      amount,
+		EndDateTime: endDatetime,
+	}
+	_, _, err = httpPost(url,
 		map[string]string{
 			"Authorization": fmt.Sprintf("Token %s", s.Token),
-		}, map[string]interface{}{
-			"amount":       params.Amount,
-			"end_datetime": params.EndDateTime,
-		})
+			"Accept":        acceptResponsePayload,
+		}, request)
 
-	fmt.Println(response, responseHeaders)
-
-	responseHeaders.Get("status")
-
+	if err != nil {
+		return
+	}
 	return
 }
 
 func (s *ProxyPay) GenerateReferenceID() (referenceID string, err error) {
+	url := fmt.Sprintf("%s/reference_ids", sandboxUrl)
+	data, _, err := httpPost(url, map[string]string{
+		"Authorization": fmt.Sprintf("Token %s", s.Token),
+		"Accept":        acceptResponsePayload,
+	}, nil)
+
+	referenceID = string(data)
 	return
 }
-func (s *ProxyPay) DeletePaymentReference() (err error) {
+func (s *ProxyPay) DeletePaymentReference(referenceID string) (err error) {
+
+	url := fmt.Sprintf("%s/refereces", sandboxUrl)
+	_, _, err = httpPost(url, map[string]string{
+		"Authorization": fmt.Sprintf("Token %s", s.Token),
+		"Accept":        acceptResponsePayload,
+	}, nil)
 	return
 }
 
-func (s *ProxyPay) GetPayment() (payment Payment, err error) {
+/*func (s *ProxyPay) AknowledgePayment(paymentID string) (err error) {
+	url := fmt.Sprintf("%s/payments/%s", sandboxUrl, paymentID)
+	_, _, err = httpPost(url, map[string]string{
+		"Authorization": fmt.Sprintf("Token %s", s.Token),
+		"Accept":        acceptResponsePayload,
+	}, nil)
 	return
-}
-
-func (s *ProxyPay) AknowledgePayment() (err error) {
-	return
-}
+}*/
