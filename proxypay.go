@@ -1,6 +1,7 @@
 package proxypaygo
 
 import (
+	"encoding/binary"
 	"errors"
 	"fmt"
 	"time"
@@ -65,7 +66,7 @@ func NewProxyPay(token string, environment string) (proxyPay *ProxyPay, err erro
 	return
 }
 
-func (s *ProxyPay) IssuePaymentReference(amount decimal.Decimal, endDatetime time.Time) (referenceID string, err error) {
+func (s *ProxyPay) IssuePaymentReference(amount decimal.Decimal, endDatetime time.Time) (referenceID int64, err error) {
 
 	referenceID, err = s.GenerateReferenceID()
 	if err != nil {
@@ -89,14 +90,14 @@ func (s *ProxyPay) IssuePaymentReference(amount decimal.Decimal, endDatetime tim
 	return
 }
 
-func (s *ProxyPay) GenerateReferenceID() (referenceID string, err error) {
+func (s *ProxyPay) GenerateReferenceID() (referenceID int64, err error) {
 	url := fmt.Sprintf("%s/reference_ids", sandboxUrl)
 	data, _, err := httpPost(url, map[string]string{
 		"Authorization": fmt.Sprintf("Token %s", s.Token),
 		"Accept":        acceptResponsePayload,
 	}, nil)
 
-	referenceID = string(data)
+	referenceID = int64(binary.BigEndian.Uint64(data))
 	return
 }
 func (s *ProxyPay) DeletePaymentReference(referenceID string) (err error) {
