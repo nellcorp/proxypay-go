@@ -129,5 +129,33 @@ func httpPost(url string, headers map[string]string, params interface{}) (respon
 }
 
 func httpDelete(url string, headers map[string]string, params interface{}) (response []byte, responseHeaders http.Header, err error) {
+
+	request, err := http.NewRequest("DELETE", url, nil)
+	if err != nil {
+		return
+	}
+	request.Header.Add("Content-Type", "application/json")
+
+	for key, value := range headers {
+		request.Header.Add(key, value)
+	}
+
+	resp, err := httpClient.Do(request)
+	if err != nil {
+		return
+	}
+	defer resp.Body.Close()
+
+	response, err = io.ReadAll(resp.Body)
+	if err != nil {
+		return
+	}
+
+	if resp.StatusCode < 200 || resp.StatusCode > 299 {
+		err = fmt.Errorf("HTTP DELETE Status: %s - Response: %s, Params: %v", resp.Status, string(response), params)
+		return
+	}
+	responseHeaders = resp.Header.Clone()
+
 	return
 }

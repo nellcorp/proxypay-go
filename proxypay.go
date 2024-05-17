@@ -10,8 +10,8 @@ import (
 )
 
 const (
-	sandboxUrl            = "some url"
-	productionUrl         = "some url"
+	sandboxUrl            = "https://api.sandbox.proxypay.co.ao"
+	productionUrl         = "https://api.proxypay.co.ao"
 	paymentTransaction    = "payment"
 	acceptResponsePayload = "application/vnd.proxypay.v2+json"
 )
@@ -19,12 +19,17 @@ const (
 var (
 	// errors
 	ErrinvalidEnvironment = errors.New("invalid environment")
+	ENV_URL               = map[string]string{
+		"production":  productionUrl,
+		"development": sandboxUrl,
+	}
 )
 
 type (
 	ProxyPay struct {
 		Token       string
 		Environment string
+		baseURL     string
 	}
 
 	Payment struct {
@@ -62,6 +67,7 @@ func NewProxyPay(token string, environment string) (proxyPay *ProxyPay, err erro
 	proxyPay = &ProxyPay{
 		Token:       token,
 		Environment: environment,
+		baseURL:     ENV_URL[environment],
 	}
 	return
 }
@@ -72,7 +78,7 @@ func (s *ProxyPay) IssuePaymentReference(amount decimal.Decimal, endDatetime tim
 	if err != nil {
 		return
 	}
-	url := fmt.Sprintf("%s/references/%d", sandboxUrl, referenceID)
+	url := fmt.Sprintf("%s/references/%d", s.baseURL, referenceID)
 
 	request := IsusePaymentReferenceParams{
 		Amount:      amount,
@@ -91,7 +97,7 @@ func (s *ProxyPay) IssuePaymentReference(amount decimal.Decimal, endDatetime tim
 }
 
 func (s *ProxyPay) GenerateReferenceID() (referenceID int64, err error) {
-	url := fmt.Sprintf("%s/reference_ids", sandboxUrl)
+	url := fmt.Sprintf("%s/reference_ids", s.baseURL)
 	data, _, err := httpPost(url, map[string]string{
 		"Authorization": fmt.Sprintf("Token %s", s.Token),
 		"Accept":        acceptResponsePayload,
@@ -109,7 +115,7 @@ func (s *ProxyPay) GenerateReferenceID() (referenceID int64, err error) {
 }
 func (s *ProxyPay) DeletePaymentReference(referenceID string) (err error) {
 
-	url := fmt.Sprintf("%s/refereces", sandboxUrl)
+	url := fmt.Sprintf("%s/refereces", s.baseURL)
 	_, _, err = httpPost(url, map[string]string{
 		"Authorization": fmt.Sprintf("Token %s", s.Token),
 		"Accept":        acceptResponsePayload,
@@ -117,11 +123,11 @@ func (s *ProxyPay) DeletePaymentReference(referenceID string) (err error) {
 	return
 }
 
-/*func (s *ProxyPay) AknowledgePayment(paymentID string) (err error) {
+func (s *ProxyPay) AknowledgePayment(paymentID string) (err error) {
 	url := fmt.Sprintf("%s/payments/%s", sandboxUrl, paymentID)
-	_, _, err = httpPost(url, map[string]string{
+	_, _, err = httpDelete(url, map[string]string{
 		"Authorization": fmt.Sprintf("Token %s", s.Token),
 		"Accept":        acceptResponsePayload,
 	}, nil)
 	return
-}*/
+}
