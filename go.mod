@@ -1,4 +1,4 @@
-module github.com/nellcorp/proxypay-go 0.1.0
+module github.com/nellcorp/proxypay-go
 
 go 1.21.4
 
