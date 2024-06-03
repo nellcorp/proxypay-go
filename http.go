@@ -128,6 +128,81 @@ func httpPost(url string, headers map[string]string, params interface{}) (respon
 	return
 }
 
+func httpPut(url string, headers map[string]string, params interface{}) (response []byte, responseHeaders http.Header, err error) {
+	var payload []byte
+
+	switch paramType := params.(type) {
+	case nil:
+		payload = []byte("")
+	case []byte:
+		payload = paramType
+	case string:
+		payload = []byte(paramType)
+	default:
+		payload, err = json.Marshal(params)
+		if err != nil {
+			return
+		}
+	}
+
+	request, err := http.NewRequest("PUT", url, strings.NewReader(string(payload)))
+	if err != nil {
+		return
+	}
+	request.Header.Add("Content-Type", "application/json")
+
+	for key, value := range headers {
+		request.Header.Add(key, value)
+	}
+
+	resp, err := httpClient.Do(request)
+	if err != nil {
+		return
+	}
+	defer resp.Body.Close()
+
+	response, err = io.ReadAll(resp.Body)
+	if err != nil {
+		return
+	}
+
+	if resp.StatusCode < 200 || resp.StatusCode > 299 {
+		err = fmt.Errorf("HTTP PUT Status: %s - Response: %s, Params: %v", resp.Status, string(response), params)
+		return
+	}
+	responseHeaders = resp.Header.Clone()
+
+	return
+}
+
 func httpDelete(url string, headers map[string]string, params interface{}) (response []byte, responseHeaders http.Header, err error) {
+
+	request, err := http.NewRequest("DELETE", url, nil)
+	if err != nil {
+		return
+	}
+	request.Header.Add("Content-Type", "application/json")
+
+	for key, value := range headers {
+		request.Header.Add(key, value)
+	}
+
+	resp, err := httpClient.Do(request)
+	if err != nil {
+		return
+	}
+	defer resp.Body.Close()
+
+	response, err = io.ReadAll(resp.Body)
+	if err != nil {
+		return
+	}
+
+	if resp.StatusCode < 200 || resp.StatusCode > 299 {
+		err = fmt.Errorf("HTTP DELETE Status: %s - Response: %s, Params: %v", resp.Status, string(response), params)
+		return
+	}
+	responseHeaders = resp.Header.Clone()
+
 	return
 }
