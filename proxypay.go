@@ -79,9 +79,9 @@ func (s *ProxyPay) IssuePaymentReference(amount decimal.Decimal, endDatetime tim
 	url := fmt.Sprintf("%s/references/%d", s.baseURL, referenceID)
 
 	fmt.Println(url)
-	request := IsusePaymentReferenceParams{
-		Amount:      amount,
-		EndDateTime: endDatetime,
+	request := map[string]interface{}{
+		"amount":       amount,
+		"end_datetime": endDatetime,
 	}
 	_, _, err = httpPut(url,
 		map[string]string{
