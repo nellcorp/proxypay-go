@@ -74,12 +74,11 @@ func NewProxyPay(token string, environment string) (proxyPay *ProxyPay, err erro
 
 func (s *ProxyPay) IssuePaymentReference(amount decimal.Decimal, endDatetime time.Time) (referenceID int64, err error) {
 
-	referenceID, err = s.GenerateReferenceID()
-	if err != nil {
-		return
-	}
+	referenceID = generateNineDigitNumber()
+
 	url := fmt.Sprintf("%s/references/%d", s.baseURL, referenceID)
 
+	fmt.Println(url)
 	request := IsusePaymentReferenceParams{
 		Amount:      amount,
 		EndDateTime: endDatetime,
