@@ -84,7 +84,7 @@ func (s *ProxyPay) IssuePaymentReference(amount decimal.Decimal, endDatetime tim
 		Amount:      amount,
 		EndDateTime: endDatetime,
 	}
-	_, _, err = httpPost(url,
+	_, _, err = httpPut(url,
 		map[string]string{
 			"Authorization": fmt.Sprintf("Token %s", s.Token),
 			"Accept":        acceptResponsePayload,
