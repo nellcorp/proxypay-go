@@ -3,7 +3,6 @@ package proxypaygo
 import (
 	"errors"
 	"fmt"
-	"strconv"
 	"time"
 
 	"github.com/shopspring/decimal"
@@ -75,13 +74,10 @@ func NewProxyPay(token string, environment string) (proxyPay *ProxyPay, err erro
 func (s *ProxyPay) IssuePaymentReference(amount decimal.Decimal, endDatetime time.Time) (referenceID int64, err error) {
 
 	referenceID = generateNineDigitNumber()
-
 	url := fmt.Sprintf("%s/references/%d", s.baseURL, referenceID)
-
-	fmt.Println(url)
-	request := IsusePaymentReferenceParams{
-		Amount:      amount,
-		EndDateTime: endDatetime,
+	request := map[string]interface{}{
+		"amount":       amount,
+		"end_datetime": endDatetime,
 	}
 	_, _, err = httpPut(url,
 		map[string]string{
@@ -95,26 +91,9 @@ func (s *ProxyPay) IssuePaymentReference(amount decimal.Decimal, endDatetime tim
 	return
 }
 
-func (s *ProxyPay) GenerateReferenceID() (referenceID int64, err error) {
-	url := fmt.Sprintf("%s/reference_ids", s.baseURL)
-	data, _, err := httpPost(url, map[string]string{
-		"Authorization": fmt.Sprintf("Token %s", s.Token),
-		"Accept":        acceptResponsePayload,
-	}, nil)
-	if err != nil {
-		return
-	}
-
-	rf, err := strconv.Atoi(string(data))
-	if err != nil {
-		panic(err)
-	}
-	referenceID = int64(rf)
-	return
-}
 func (s *ProxyPay) DeletePaymentReference(referenceID string) (err error) {
 
-	url := fmt.Sprintf("%s/refereces", s.baseURL)
+	url := fmt.Sprintf("%s/references", s.baseURL)
 	_, _, err = httpPost(url, map[string]string{
 		"Authorization": fmt.Sprintf("Token %s", s.Token),
 		"Accept":        acceptResponsePayload,
