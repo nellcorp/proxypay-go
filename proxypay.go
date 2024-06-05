@@ -101,8 +101,8 @@ func (s *ProxyPay) DeletePaymentReference(referenceID string) (err error) {
 	return
 }
 
-func (s *ProxyPay) AknowledgePayment(paymentID string) (err error) {
-	url := fmt.Sprintf("%s/payments/%s", sandboxUrl, paymentID)
+func (s *ProxyPay) AknowledgePayment(paymentID int64) (err error) {
+	url := fmt.Sprintf("%s/payments/%d", sandboxUrl, paymentID)
 	_, _, err = httpDelete(url, map[string]string{
 		"Authorization": fmt.Sprintf("Token %s", s.Token),
 		"Accept":        acceptResponsePayload,
