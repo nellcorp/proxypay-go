@@ -92,7 +92,26 @@ func (s *ProxyPay) IssuePaymentReference(amount decimal.Decimal, endDatetime tim
 	return
 }
 
-func (s *ProxyPay) DeletePaymentReference(referenceID string) (err error) {
+func (s *ProxyPay) UpdatePaymentReference(amount decimal.Decimal, referenceID int64, endDatetime time.Time) (err error) {
+	url := fmt.Sprintf("%s/references/%d", s.baseURL, referenceID)
+
+	request := map[string]interface{}{
+		"amount":       amount,
+		"end_datetime": endDatetime,
+	}
+	_, _, err = httpPut(url,
+		map[string]string{
+			"Authorization": fmt.Sprintf("Token %s", s.Token),
+			"Accept":        acceptResponsePayload,
+		}, request)
+
+	if err != nil {
+		return
+	}
+	return
+}
+
+func (s *ProxyPay) DeletePaymentReference(referenceID int64) (err error) {
 
 	url := fmt.Sprintf("%s/references", s.baseURL)
 	_, _, err = httpPost(url, map[string]string{
