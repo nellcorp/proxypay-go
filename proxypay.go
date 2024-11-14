@@ -29,6 +29,7 @@ type (
 		Token       string
 		Environment string
 		baseURL     string
+		CallbackURl string
 	}
 
 	Payment struct {
@@ -57,7 +58,7 @@ type (
 	}
 )
 
-func NewProxyPay(token string, environment string) (proxyPay *ProxyPay, err error) {
+func NewProxyPay(token string, environment string, callbackURl string) (proxyPay *ProxyPay, err error) {
 
 	if environment != "development" && environment != "production" {
 		err = ErrinvalidEnvironment
@@ -67,6 +68,7 @@ func NewProxyPay(token string, environment string) (proxyPay *ProxyPay, err erro
 		Token:       token,
 		Environment: environment,
 		baseURL:     ENV_URL[environment],
+		CallbackURl: callbackURl,
 	}
 	return
 }
@@ -77,8 +79,9 @@ func (s *ProxyPay) IssuePaymentReference(amount decimal.Decimal, endDatetime tim
 	url := fmt.Sprintf("%s/references/%d", s.baseURL, referenceID)
 
 	request := map[string]interface{}{
-		"amount":       amount,
-		"end_datetime": endDatetime,
+		"amount":        amount,
+		"end_datetime":  endDatetime,
+		"custom_fields": map[string]string{"callback_url": s.CallbackURl},
 	}
 	_, _, err = httpPut(url,
 		map[string]string{
