@@ -11,8 +11,8 @@ import (
 const (
 	sandboxUrl            = "https://api.sandbox.proxypay.co.ao"
 	productionUrl         = "https://api.proxypay.co.ao"
-	paymentTransaction    = "payment"
 	acceptResponsePayload = "application/vnd.proxypay.v2+json"
+	idempotencyKey        = "4b3dc944-e30d-49a5-9a94-923f72d11837"
 )
 
 var (
@@ -22,6 +22,7 @@ var (
 		"production":  productionUrl,
 		"development": sandboxUrl,
 	}
+	PaymentTransactionType TransactionType = "payment"
 )
 
 type (
@@ -31,6 +32,8 @@ type (
 		baseURL     string
 		CallbackURl string
 	}
+
+	TransactionType string
 
 	Payment struct {
 		ID                    int64
@@ -72,6 +75,8 @@ func NewProxyPay(token string, environment string, callbackURl string) (proxyPay
 	}
 	return
 }
+
+// mcx reference
 
 func (s *ProxyPay) IssuePaymentReference(amount decimal.Decimal, endDatetime time.Time) (referenceID int64, err error) {
 
@@ -130,5 +135,31 @@ func (s *ProxyPay) AknowledgePayment(paymentID int64) (err error) {
 		"Authorization": fmt.Sprintf("Token %s", s.Token),
 		"Accept":        acceptResponsePayload,
 	}, nil)
+	return
+}
+
+// mcx online
+
+func (s *ProxyPay) CreateTransaction(amount string, callbackUrl strin, mobile string) (err error) {
+
+	url := fmt.Sprintf("%s/opg/v1/transactions", s.baseURL)
+	request := map[string]interface{}{
+		"type":         PaymentTransactionType,
+		"pos_id":       123, // TODO: get from somewhere
+		"mobile":       mobile,
+		"amount":       amount,
+		"callback_url": callbackUrl,
+	}
+	_, _, err = httpPost(url,
+		map[string]string{
+			"Content-Type":    "application/json",
+			"Idempotency-Key": idempotencyKey,
+			"Authorization":   fmt.Sprintf("Bearer %s", s.Token),
+			"Accept":          acceptResponsePayload,
+		}, request)
+
+	if err != nil {
+		return
+	}
 	return
 }
