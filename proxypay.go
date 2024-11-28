@@ -132,3 +132,22 @@ func (s *ProxyPay) AknowledgePayment(paymentID int64) (err error) {
 	}, nil)
 	return
 }
+
+func (s *ProxyPay) MockPayment(referenceID string, amount decimal.Decimal) (err error) {
+	if s.Environment == "production" {
+		return errors.New("cannot mock payments in production")
+	}
+	url := fmt.Sprintf("%s/payments", sandboxUrl)
+	_, _, err = httpPost(
+		url,
+		map[string]string{
+			"Authorization": fmt.Sprintf("Token %s", s.Token),
+			"Accept":        acceptResponsePayload,
+		},
+		map[string]interface{}{
+			"reference_id": referenceID,
+			"amount":       amount,
+		},
+	)
+	return
+}
